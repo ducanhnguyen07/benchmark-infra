@@ -1,0 +1,17 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: ${NAME}
+  namespace: testapi
+spec:
+  source:
+    http:
+      url: "https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img"
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: longhorn
+    volumeMode: Filesystem
+    resources:
+      requests:
+        storage: "4Gi"

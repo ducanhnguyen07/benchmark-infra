@@ -1,0 +1,33 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ${VM_NAME}
+  namespace: testapi
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: ${VM_NAME}
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 512Mi  # RAM nhỏ để chạy được 4 con
+            cpu: "100m"
+        devices:
+          disks:
+            - name: bootdisk
+              disk:
+                bus: virtio
+      volumes:
+        - name: bootdisk
+          persistentVolumeClaim:
+            claimName: ${PVC_NAME}
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: 1234
+              chpasswd: { expire: False }
+              ssh_pwauth: True

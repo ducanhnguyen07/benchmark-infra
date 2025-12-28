@@ -1,0 +1,40 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: ${NAME}
+  namespace: testapi
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: ${NAME}
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: "100m"
+        devices:
+          disks:
+            # 1. Định nghĩa phần cứng ổ đĩa chính
+            - name: rootdisk
+              disk:
+                bus: virtio
+            # 2. Định nghĩa phần cứng ổ CloudInit
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+      volumes:
+        # 3. Nguồn dữ liệu ổ chính (Lấy từ PVC/DataVolume)
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: ${NAME}
+        # 4. Nguồn dữ liệu CloudInit (Nội dung text)
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: 1234
+              chpasswd: { expire: False }
+              ssh_pwauth: True
