@@ -41,25 +41,19 @@ for ((i=1; i<=TOTAL_VMS; i++)); do
       iperf3 -s -D > /dev/null 2>&1
     "
 
-    # Timeout 90s cho cài đặt (phòng khi mạng chậm)
     timeout 90s sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER@$IP "$COMMAND" > /dev/null 2>&1
 
-    # QUAN TRỌNG: Chờ 5s để Server chắc chắn đã lên
     sleep 5
 
-    # 3. TEST 1: Đo băng thông TCP (Chỉ 2s để tránh sập VM yếu)
     TCP_RESULT=$(iperf3 -c $IP -t 2 -f m --json 2>/dev/null)
     THROUGHPUT=$(echo "$TCP_RESULT" | grep -oP '"bits_per_second":\s*\K[0-9.]+' | head -n 1 | awk '{printf "%.2f", $1/1000000}')
 
-    # 4. TEST 2: Đo Jitter UDP (Chỉ 2s)
     UDP_RESULT=$(iperf3 -c $IP -u -t 2 -b 1M --json 2>/dev/null)
     JITTER=$(echo "$UDP_RESULT" | grep -oP '"jitter_ms":\s*\K[0-9.]+' | head -n 1)
 
-    # Xử lý kết quả rỗng
     if [ -z "$THROUGHPUT" ]; then THROUGHPUT="0"; fi
     if [ -z "$JITTER" ]; then JITTER="Err"; fi
 
-    # 5. Đánh giá
     RANK="✅ Smooth"
     if (( $(echo "$THROUGHPUT < 100" | bc -l 2>/dev/null) )); then RANK="⚠️ Slow DL"; fi
     if [ "$JITTER" == "Err" ]; then
